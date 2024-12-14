@@ -1,3 +1,5 @@
+# Runs muvh faster unfrt pypy.
+
 import sys
 sys.path.insert(1, '../src')
 from tinyrand import TinyRand, MASK
@@ -26,21 +28,50 @@ n2chi = {
     11: (39902104.0, 39931496.0),
     }
 
+units = (('d', 3600.0 * 24),
+         ('h', 3600.0),
+         ('m', 60.0))
+
+def format_seconds(s):
+    result = ""
+    for tag, f in units:
+        n = int(s / f)
+        if n or result:
+            result += str(n) + tag
+        s -= n * f
+    return result + format(s, '.1f') + "s"
+
 def check(n, seed=0, FREQ=16):
     from math import factorial
     from collections import defaultdict
+    from time import perf_counter as now
 
     t = TinyRand(seed)
     f = factorial(n)
     base = list(range(n))
     d = defaultdict(int)
-    for i in range(FREQ * f):
+    totaltrips = FREQ * f
+    ntrips = 0
+    limit = limit_inc = totaltrips // 20
+    start_time = now()
+    for i in range(totaltrips):
+        ntrips += 1
+        if ntrips >= limit:
+            pdone = ntrips / totaltrips
+            elapsed = now() - start_time
+            eta = elapsed / ntrips * (totaltrips - ntrips)
+            print(f"{pdone:.1%} done; eta {format_seconds(eta)}",
+                  end="           \r")
+            limit += limit_inc
         xs = base[:]
         t.shuffle(xs)
+        assert sorted(xs) == base
         tot = 0
         for x in xs:
             tot = tot * 100 + x
         d[tot] += 1
+    print("total time", format_seconds(now() - start_time), " " * 40)
+
     missing = f - len(d)
     assert missing >= 0
     chisq = 0
@@ -48,17 +79,23 @@ def check(n, seed=0, FREQ=16):
         print(missing, "missing")
         chisq = missing * FREQ
     chisq += sum((got - FREQ)**2 / FREQ for got in d.values())
-    print(n, "df", f - 1, "chisq", chisq)
+    print("df", f - 1, "chisq", chisq)
+    nbad = 0
     if n in n2chi:
         lo, hi = n2chi[n]
         assert lo < hi
         if lo <= chisq <= hi:
             print("in 5%-95% bounds", lo, "<=", chisq, "<=", hi)
-        elif lo > chisq:
-            print("less than 5% bound", chisq, "<", lo)
         else:
-            assert hi < chisq
-            print("greater than 95% bound", chisq, ">", hi)
+            nbad += 1
+            print("*** WARNING *** suspicous chi square ***")
+            if lo > chisq:
+                print("less than 5% bound", chisq, "<", lo)
+            else:
+                assert hi < chisq
+                print("greater than 95% bound", chisq, ">", hi)
+    if nbad:
+        print("number of chi square warnings =", nbad)
     return d
 
 if 1:
