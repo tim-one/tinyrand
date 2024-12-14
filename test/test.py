@@ -80,22 +80,18 @@ def check(n, seed=0, FREQ=16):
         chisq = missing * FREQ
     chisq += sum((got - FREQ)**2 / FREQ for got in d.values())
     print("df", f - 1, "chisq", chisq)
-    nbad = 0
     if n in n2chi:
         lo, hi = n2chi[n]
         assert lo < hi
         if lo <= chisq <= hi:
             print("in 5%-95% bounds", lo, "<=", chisq, "<=", hi)
         else:
-            nbad += 1
             print("*** WARNING *** suspicous chi square ***")
             if lo > chisq:
                 print("less than 5% bound", chisq, "<", lo)
             else:
                 assert hi < chisq
                 print("greater than 95% bound", chisq, ">", hi)
-    if nbad:
-        print("number of chi square warnings =", nbad)
     return d
 
 if 1:
