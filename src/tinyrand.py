@@ -47,7 +47,7 @@ class TinyRandBase:
 
     # A "forward" version of Fisher-Yates. Python's `shuffle()` is the
     # more common "backward" version, but that benefits a lot from
-    # Python's int.bit_length() methed. The forward version doesn't need
+    # Python's int.bit_length() method. The forward version doesn't need
     # that (`bits` below tracks the needed bit length as `j` increases).
     def shuffle(self, a):
         """Permute list `a` in-place, leaving it in a random order."""
