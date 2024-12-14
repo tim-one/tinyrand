@@ -32,10 +32,11 @@ class TinyRandBase:
     # Bays-Durham shuffle of the base LCG. This increases the period
     # and breaks up the extreme regularity of the LCG's low-order bits.
     def get(self):
-        i = self.result & BD_MASK
+        result = self.result
+        i = result & BD_MASK
         self.result = self.tab[i]
         self.tab[i] = self._get()
-        return self.result
+        return result
 
     # Return random int that fits in at most `n` bits.
     # IOW, a random int in range(2**n).
