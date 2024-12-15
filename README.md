@@ -54,7 +54,7 @@ exactly,
 
     Return an object that can be used for shuffling.
 
-    `version is an integer in SUPPORTED_VERSIONS.
+    `version` is an integer in SUPPORTED_VERSIONS.
 
     `seed` is an integer >= 0 used to initialize the internal random number
 generator's state. Only the trailing bits are used - the state is typically
@@ -91,4 +91,4 @@ It also has a few constants of minor interest:
 
 - `t.NSTATES`
 
-    The number of basic internal states == `2 ** t.BITS`.
+    The number of internal basic states == `2 ** t.BITS`.
