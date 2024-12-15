@@ -5,12 +5,12 @@ sys.path.insert(1, '../src')
 
 import tinyrand
 
-prefix = [
-    [10291, 33686, 18285, 43428, 60511,
-     1994, 28201, 62888, 23275, 54622], # 0
-    [10037299, 10453910, 39995245, 1681828, 58453087,
-     47450058, 51408425, 28767656, 33774315, 43177310], # 2
-    ]
+prefix = {
+    0: [10291, 33686, 18285, 43428, 60511,
+        1994, 28201, 62888, 23275, 54622],
+    1: [10037299, 10453910, 39995245, 1681828, 58453087,
+        47450058, 51408425, 28767656, 33774315, 43177310],
+    }
 
 # .05 and .95 chi square bounds
 # https://stattrek.com/online-calculator/chi-square
@@ -43,7 +43,6 @@ def format_seconds(s):
 def check(version):
     SEED = 42
     t = tinyrand.get(version, seed=SEED)
-
     assert t.NSTATES == 1 << t.BITS
     first = t._get()
     full = {t._get() for i in range(t.NSTATES - 1)}
@@ -86,7 +85,7 @@ def check_chi2(t, n, FREQ=16):
     d = defaultdict(int)
     totaltrips = FREQ * f
     ntrips = 0
-    limit = limit_inc = totaltrips // 20
+    limit = limit_inc = 1_000_000
     start_time = now()
     for i in range(totaltrips):
         ntrips += 1
@@ -137,11 +136,11 @@ def drive(seed=0):
         pass
 
     for version in tinyrand.SUPPORTED_VERSIONS:
-        print("\nversion =", version)
+        print("\nversion", version)
         check(version)
         t = tinyrand.get(version, seed)
         for n in range(1, 12):
-            print("\nversion =", version, "n =", n)
+            print("\nversion", version, "n", n)
             k = check_chi2(t, n)
             del k
 
