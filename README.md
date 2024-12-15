@@ -8,10 +8,10 @@ The driving use case is for "last resort" tie-breaking in election scoring syste
 if there's no other way to break a tie, candidate C beats D if and only if C appears before D in the list. In Python:
 
 ```python
-# cands is a list of candidates.
-cands.sort() # start with deterministic order
+# `tiebreaker` is a list of candidates
+tiebreaker.sort() # start with deterministic order
 t = TinyRand(some_integer_seed)
-t.shuffle(cands)
+t.shuffle(tiebreaker)
 ```
 
 Speed isn't important here. Code simplicity, portability, and reproducibilty are. Quality of results isn't especially important either. If all permutations of
