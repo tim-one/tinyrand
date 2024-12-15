@@ -8,9 +8,10 @@ assert DEFAULT_VERSION in SUPPORTED_VERSIONS
 class TinyRandBase:
     VERSION = None  # subclass must override
     BITS = 16       # number of state bits
-    BD_BITS = 7     # rable for Bays-Durham shuffle
+    BD_BITS = 7     # table for Bays-Durham shuffle
 
     def __init__(self, seed=0):
+        assert self.BITS >= 16
         self.NSTATES = 1 << self.BITS
         self.MASK = self.NSTATES - 1
         assert self.BD_BITS <= self.BITS
@@ -26,11 +27,12 @@ class TinyRandBase:
         self.tab = [self._get() for i in range(self.BD_SIZE)]
         self.result = self._get()
 
-    # Subclass must supply this,
+    # Subclass must supply this, Note that NSTATES == 2**BITS,
+    # and BITS must be >= 16.
     def _get(self):
-        """Return a random iot in range(2**16).
+        """Return a random iot in range(NSTATES).
 
-        The period is 2**16, and each possible result appears once
+        The period is NSTATES, and each possible result appears once
         across the period.
         """
 
