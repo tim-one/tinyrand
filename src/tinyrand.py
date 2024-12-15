@@ -25,7 +25,7 @@ class TinyRandBase:
     def seed(self, seed):
         if seed < 0:
             raise ValueError("seed must be >= 0", seed)
-        self.seed = seed & self.MASK
+        self.state = seed & self.MASK
         self.tab = [self._get() for i in range(self.BD_SIZE)]
         self.result = self._get()
 
@@ -88,8 +88,8 @@ class TinyRand0(TinyRandBase):
         # An ordinary LCG.
         # 43317 came from a table of multipliers with "goad" spectral
         # scores,
-        self.seed = (self.seed * 43317 + 1) & self.MASK
-        return self.seed
+        self.state = (self.state * 43317 + 1) & self.MASK
+        return self.state
 
         # A PCG-like trick to permute the output space, destroying the
         # extreme regularity across the sequence of low-order bits

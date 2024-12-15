@@ -41,11 +41,16 @@ def format_seconds(s):
     return result + format(s, '.1f') + "s"
 
 def check(version):
-    t = tinyrand.get(version, seed=42)
-    assert [t.get() for i in range(10)] == prefix[version]
-
-    full = {t._get() for i in range(t.NSTATES)}
+    SEED = 42
+    t = tinyrand.get(version, seed=SEED)
+    first = t._get()
+    full = {t._get() for i in range(t.NSTATES - 1)}
+    full.add(first)
     assert len(full) == t.NSTATES
+    assert t._get() == first
+
+    t.seed(SEED)
+    assert [t.get() for i in range(10)] == prefix[version]
 
 from math import factorial
 from collections import defaultdict
