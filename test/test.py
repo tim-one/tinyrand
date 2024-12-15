@@ -8,6 +8,8 @@ import tinyrand
 prefix = [
     [10291, 33686, 18285, 43428, 60511,
      1994, 28201, 62888, 23275, 54622], # 0
+    [10037299, 10453910, 39995245, 1681828, 58453087,
+     47450058, 51408425, 28767656, 33774315, 43177310], # 2
     ]
 
 # .05 and .95 chi square bounds
@@ -49,6 +51,27 @@ from math import factorial
 from collections import defaultdict
 from time import perf_counter as now
 
+# Generate FREQ * factorial(n) shufflings of list(range(n)), and count
+# how many of each are found. The expected number of each is FREQ. The
+# actual distribution of counts follows a chi square distribution with
+# factorial(n)-1 degrees of freedom. We compute that, and compare it to
+# the theoretical range bounded by the 5% and 95% critical values.
+#
+# It's OK if a few of these generate warnings. A truly random generator
+# would be _expected_ to do so about 10% of the time! If it happens,
+# try it again for the same value of n using different seeds.
+#
+# It's especially unconcerning to see a stat on the low side:
+#
+#     *** WARNING *** suspicious chi square ***
+#     less than 5% bound 361206.875 < 361478.8635991877
+#
+# That's saying that the distribution seen is _more_ uniformly FREQ
+# than a truly random generator would deliver. For purposes of breaking
+# election ties, that's arguably a good thing.
+#
+# Note: so long as FREQ is a power of 2, the chi square statistic is
+# exactly representable as a binary float,
 def check_chi2(t, n, FREQ=16):
     f = factorial(n)
     base = list(range(n))
@@ -90,7 +113,7 @@ def check_chi2(t, n, FREQ=16):
             print("in 5%-95% bounds", lo, "<=", chisq, "<=", hi)
         else:
             print()
-            print("*** WARNING *** suspicous chi square ***")
+            print("*** WARNING *** suspicious chi square ***")
             if lo > chisq:
                 print("less than 5% bound", chisq, "<", lo)
             else:
@@ -99,7 +122,7 @@ def check_chi2(t, n, FREQ=16):
     return d
 
 def drive(seed=0):
-    for version in range(tinyrand.MAX_VERSION + 1):
+    for version in tinyrand.SUPPORTED_VERSIONS:
         print("\nversion =", version)
         check(version)
         t = tinyrand.get(version, seed)

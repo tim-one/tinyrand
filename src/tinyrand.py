@@ -1,23 +1,25 @@
 # Very simple 16-bit PRNG, self-contained, and needing nothing fancier
 # than 16x16->32 bit unsigned integer multiplication.
 
-MAX_VERSION = 0
+MAX_VERSION = 1
 DEFAULT_VERSION = MAX_VERSION
+SUPPORTED_VERSIONS = [0, 1]
+assert DEFAULT_VERSION in SUPPORTED_VERSIONS
+assert MAX_VERSION in SUPPORTED_VERSIONS
+assert 0 in SUPPORTED_VERSIONS
 
 class TinyRandBase:
-    VERSION = None # subclass must override
-
-    BITS = 16
-    NSTATES = 1 << BITS
-    MASK = NSTATES - 1
-
-    # Table for Bays-Durham shuffle.
-    BD_BITS = 7
-    assert BD_BITS <= BITS
-    BD_SIZE = 1 << BD_BITS
-    BD_MASK = BD_SIZE - 1
+    VERSION = None  # subclass must override
+    BITS = 16       # number of state bits
+    BD_BITS = 7     # rable for Bays-Durham shuffle
 
     def __init__(self, seed=0):
+        self.NSTATES = 1 << self.BITS
+        self.MASK = self.NSTATES - 1
+        assert self.BD_BITS <= self.BITS
+        self.BD_SIZE = 1 << self.BD_BITS
+        self.BD_MASK = self.BD_SIZE - 1
+
         self.seed(seed)
 
     def seed(self, seed):
@@ -95,10 +97,19 @@ class TinyRand0(TinyRandBase):
         # that this extra expense doesn't really help.
         #return self.seed ^ (self.seed >> 7)
 
+class TinyRand1(TinyRand0):
+    VERSION = 1
+    BITS = 26
+
+    def __init__(self, seed=0):
+        super().__init__(seed)
+
 def get(version=DEFAULT_VERSION, seed=0):
-    if not 0 <= version <= MAX_VERSION:
-        raise ValueError("invalid version", version)
+    if version not in SUPPORTED_VERSIONS:
+        raise ValueError("invalid version", version,
+                         "must be in", SUPPORTED_VERSIONS)
     t =(TinyRand0,
+        TinyRand1,
        )[version](seed)
     assert version == t.VERSION
     return t
