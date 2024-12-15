@@ -52,6 +52,12 @@ After `t = tinyrand.get(...)`, `t` has one method of primary interest:
     `xs` is a list, which is randomly permuted in place. `None` is returned,
 as is the usual case for Python's mutating functions.
 
+Of less interest,
+
+- `t.seed(seed)`
+
+    Sets `t`'s  state to the same as if it had just been created by `.get()` with the same `seed`.
+
 It also has a few constants of minor interest:
 
 - `t.VERSION`
