@@ -46,6 +46,10 @@ exactly,
 
     A tuple of supported version numbers (small integers) in sorted order.
 
+- `tinyrand.DEFAULT_VERSION`
+
+    The version returned if a version isn't passed to `get()`.
+
 - `tinyrand.get(version=tinyrand.DEFAULT_VERSION, seed=0)`
 
     Return an object that can be used for shuffling.
@@ -58,10 +62,6 @@ very small.
 
     It's intended that results be exactly reproducible "forever", across all
 implementations, for objects created with the same `version`and `seed`.
-
-- `tinyrand.DEFAULT_VERSION`
-
-    The version returned if a version isn't passed to `get()`.
 
 ### Instance objects
 
