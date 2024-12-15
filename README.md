@@ -8,9 +8,10 @@ The driving use case is for "last resort" tie-breaking in election scoring syste
 if there's no other way to break a tie, candidate C beats D if and only if C appears before D in the list. In Python:
 
 ```python
+import tinyrand
 # `tiebreaker` is a list of candidates
 tiebreaker.sort() # start with deterministic order
-t = TinyRand(some_integer_seed)
+t = tinyrand.get(seed=some_integer_seed) # use default version
 t.shuffle(tiebreaker)
 ```
 

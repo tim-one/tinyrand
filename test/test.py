@@ -2,14 +2,15 @@
 
 import sys
 sys.path.insert(1, '../src')
-from tinyrand import TinyRand, MASK
 
-t = TinyRand()
-full = {t._get() for i in range(MASK + 1)}
-assert len(full) == MASK + 1
+import tinyrand
+
+t = tinyrand.get(0)
+full = {t._get() for i in range(t.MASK + 1)}
+assert len(full) == t.MASK + 1
 del full
 
-t = TinyRand(42)
+t = tinyrand.get(0, seed=42)
 assert [t.get() for i in range(10)] == \
     [10339, 22742, 63965, 15436, 29681, 46670, 63352, 3655, 8742, 3462]
 
@@ -46,7 +47,7 @@ def check(n, seed=0, FREQ=16):
     from collections import defaultdict
     from time import perf_counter as now
 
-    t = TinyRand(seed)
+    t = tinyrand.get(0, seed)
     f = factorial(n)
     base = list(range(n))
     d = defaultdict(int)

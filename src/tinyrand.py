@@ -1,22 +1,27 @@
 # Very simple 16-bit PRNG, self-contained, and needing nothing fancier
 # than 16x16->32 bit unsigned integer multiplication.
 
-BITS = 16
-MASK = (1 << BITS) - 1
-
-# Table for Bays-Durham shuffle.
-BD_BITS = 7
-assert BD_BITS <= BITS
-BD_SIZE = 1 << BD_BITS
-BD_MASK = BD_SIZE - 1
+MAX_VERSION = 0
+DEFAULT_VERSION = MAX_VERSION
 
 class TinyRandBase:
+    VERSION = None # subclass must override
+
+    BITS = 16
+    MASK = (1 << BITS) - 1
+
+    # Table for Bays-Durham shuffle.
+    BD_BITS = 7
+    assert BD_BITS <= BITS
+    BD_SIZE = 1 << BD_BITS
+    BD_MASK = BD_SIZE - 1
+    
     def __init__(self, seed=0):
         self.seed(seed)
 
     def seed(self, seed):
-        self.seed = seed & MASK
-        self.tab = [self._get() for i in range(BD_SIZE)]
+        self.seed = seed & self.MASK
+        self.tab = [self._get() for i in range(self.BD_SIZE)]
         self.result = self._get()
 
     # Subclass must supply this,
@@ -33,7 +38,7 @@ class TinyRandBase:
     # and breaks up the extreme regularity of the LCG's low-order bits.
     def get(self):
         result = self.result
-        i = result & BD_MASK
+        i = result & self.BD_MASK
         self.result = self.tab[i]
         self.tab[i] = self._get()
         return result
@@ -43,8 +48,8 @@ class TinyRandBase:
     # 1 <= n <= BITS required. In context, this is meant to be a helper
     # for `shuffle()`. Of course it _could_ bw made fancier.
     def getrandbits(self, n):
-        assert 1 <= n <= BITS
-        return self.get() >> (BITS - n)
+        assert 1 <= n <= self.BITS
+        return self.get() >> (self.BITS - n)
 
     # A "forward" version of Fisher-Yates. Python's `shuffle()` is the
     # more common "backward" version, but that benefits a lot from
@@ -52,7 +57,7 @@ class TinyRandBase:
     # that (`bits` below tracks the needed bit length as `j` increases).
     def shuffle(self, a):
         """Permute list `a` in-place, leaving it in a random order."""
-        if len(a) >= MASK + 1:
+        if len(a) >= self.MASK + 1:
             raise ValueError("list too long", len(a))
         bits = 1
         hi = 2
@@ -68,7 +73,9 @@ class TinyRandBase:
                 pass # typically executed at most once
             a[i], a[j] = a[j], a[i]
 
-class TinyRand(TinyRandBase):
+class TinyRand0(TinyRandBase):
+    VERSION = 0
+
     def __init__(self, seed=0):
         super().__init__(seed)
 
@@ -76,7 +83,16 @@ class TinyRand(TinyRandBase):
         # An ordinary LCG.
         # 43317 came from a table of multipliers with "goad" spectral
         # scores,
-        self.seed = (self.seed * 43317 + 1) & MASK
+        self.seed = (self.seed * 43317 + 1) & self.MASK
         # A PCG-like trick to permute the output space, destroying the
         # extreme regularity across the sequence of low-order bits
         return self.seed ^ (self.seed >> 7)
+
+def get(version=DEFAULT_VERSION, seed=0):
+    if not 0 <= version <= MAX_VERSION:
+        raise ValueError("invalid version", version)
+    t =(TinyRand0,
+       )[version](seed)
+    assert version == t.VERSION
+    return t
+
