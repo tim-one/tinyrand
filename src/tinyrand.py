@@ -15,7 +15,7 @@ class TinyRandBase:
     assert BD_BITS <= BITS
     BD_SIZE = 1 << BD_BITS
     BD_MASK = BD_SIZE - 1
-    
+
     def __init__(self, seed=0):
         self.seed(seed)
 
@@ -84,9 +84,13 @@ class TinyRand0(TinyRandBase):
         # 43317 came from a table of multipliers with "goad" spectral
         # scores,
         self.seed = (self.seed * 43317 + 1) & self.MASK
+        return self.seed
+
         # A PCG-like trick to permute the output space, destroying the
         # extreme regularity across the sequence of low-order bits
-        return self.seed ^ (self.seed >> 7)
+        # Note: Bays-Durham shuffling looks strong enough on its own
+        # that this extra expense doesn't really help.
+        #return self.seed ^ (self.seed >> 7)
 
 def get(version=DEFAULT_VERSION, seed=0):
     if not 0 <= version <= MAX_VERSION:
@@ -95,4 +99,3 @@ def get(version=DEFAULT_VERSION, seed=0):
        )[version](seed)
     assert version == t.VERSION
     return t
-

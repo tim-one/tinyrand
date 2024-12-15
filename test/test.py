@@ -12,7 +12,7 @@ del full
 
 t = tinyrand.get(0, seed=42)
 assert [t.get() for i in range(10)] == \
-    [10339, 22742, 63965, 15436, 29681, 46670, 63352, 3655, 8742, 3462]
+    [10291, 33686, 18285, 43428, 60511, 1994, 28201, 62888, 23275, 54622]
 
 # .05 and .95 chi square bounds
 # https://stattrek.com/online-calculator/chi-square
