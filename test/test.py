@@ -5,14 +5,10 @@ sys.path.insert(1, '../src')
 
 import tinyrand
 
-t = tinyrand.get(0)
-full = {t._get() for i in range(t.MASK + 1)}
-assert len(full) == t.MASK + 1
-del full
-
-t = tinyrand.get(0, seed=42)
-assert [t.get() for i in range(10)] == \
-    [10291, 33686, 18285, 43428, 60511, 1994, 28201, 62888, 23275, 54622]
+prefix = [
+    [10291, 33686, 18285, 43428, 60511,
+     1994, 28201, 62888, 23275, 54622], # 0
+    ]
 
 # .05 and .95 chi square bounds
 # https://stattrek.com/online-calculator/chi-square
@@ -42,12 +38,18 @@ def format_seconds(s):
         s -= n * f
     return result + format(s, '.1f') + "s"
 
-def check(n, seed=0, FREQ=16):
-    from math import factorial
-    from collections import defaultdict
-    from time import perf_counter as now
+def check(version):
+    t = tinyrand.get(version, seed=42)
+    assert [t.get() for i in range(10)] == prefix[version]
 
-    t = tinyrand.get(0, seed)
+    full = {t._get() for i in range(t.NSTATES)}
+    assert len(full) == t.NSTATES
+
+from math import factorial
+from collections import defaultdict
+from time import perf_counter as now
+
+def check_chi2(t, n, FREQ=16):
     f = factorial(n)
     base = list(range(n))
     d = defaultdict(int)
@@ -87,6 +89,7 @@ def check(n, seed=0, FREQ=16):
         if lo <= chisq <= hi:
             print("in 5%-95% bounds", lo, "<=", chisq, "<=", hi)
         else:
+            print()
             print("*** WARNING *** suspicous chi square ***")
             if lo > chisq:
                 print("less than 5% bound", chisq, "<", lo)
@@ -95,8 +98,15 @@ def check(n, seed=0, FREQ=16):
                 print("greater than 95% bound", chisq, ">", hi)
     return d
 
-if 1:
-    for n in range(1, 12):
-        print("\nn =", n)
-        k = check(n)
-        del k
+def drive(seed=0):
+    for version in range(tinyrand.MAX_VERSION + 1):
+        print("\nversion =", version)
+        check(version)
+        t = tinyrand.get(version, seed)
+        for n in range(1, 12):
+            print("\nversion =", version, "n =", n)
+            k = check_chi2(t, n)
+            del k
+
+if __name__ == "__main__":
+    drive()

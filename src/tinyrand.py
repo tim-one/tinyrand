@@ -8,7 +8,8 @@ class TinyRandBase:
     VERSION = None # subclass must override
 
     BITS = 16
-    MASK = (1 << BITS) - 1
+    NSTATES = 1 << BITS
+    MASK = NSTATES - 1
 
     # Table for Bays-Durham shuffle.
     BD_BITS = 7
@@ -20,6 +21,8 @@ class TinyRandBase:
         self.seed(seed)
 
     def seed(self, seed):
+        if seed < 0:
+            raise ValueError("seed must be >= 0", seed)
         self.seed = seed & self.MASK
         self.tab = [self._get() for i in range(self.BD_SIZE)]
         self.result = self._get()
@@ -57,7 +60,7 @@ class TinyRandBase:
     # that (`bits` below tracks the needed bit length as `j` increases).
     def shuffle(self, a):
         """Permute list `a` in-place, leaving it in a random order."""
-        if len(a) >= self.MASK + 1:
+        if len(a) > self.NSTATES:
             raise ValueError("list too long", len(a))
         bits = 1
         hi = 2
