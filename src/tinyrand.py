@@ -82,7 +82,7 @@ class TinyRand0(TinyRandBase):
 
     def _get(self):
         # An ordinary LCG.
-        # 43317 came from a table of multipliers with "goad" spectral
+        # 43317 came from a table of multipliers with "good" spectral
         # scores,
         self.state = (self.state * 43317 + 1) & self.MASK
         return self.state
