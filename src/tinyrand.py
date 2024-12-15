@@ -81,9 +81,6 @@ class TinyRandBase:
 class TinyRand0(TinyRandBase):
     VERSION = 0
 
-    def __init__(self, seed=0):
-        super().__init__(seed)
-
     def _get(self):
         # An ordinary LCG.
         # 43317 came from a table of multipliers with "goad" spectral
@@ -100,9 +97,6 @@ class TinyRand0(TinyRandBase):
 class TinyRand1(TinyRand0):
     VERSION = 1
     BITS = 26
-
-    def __init__(self, seed=0):
-        super().__init__(seed)
 
 def get(version=DEFAULT_VERSION, seed=0):
     if version not in SUPPORTED_VERSIONS:
