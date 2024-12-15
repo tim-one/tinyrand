@@ -42,28 +42,26 @@ exactly,
 
 ### Module level
 
+- `tinyrand.SUPPORTED_VERSIONS`
+
+    A tuple of supported version numbers (small integers) in sorted order.
+
 - `tinyrand.get(version=tinyrand.DEFAULT_VERSION, seed=0)`
 
     Return an object that can be used for shuffling.
-    The version is an integer between 0 and `tinyrand.MAX_VERSION`
-inclusive, It's intended that results be exactly reproducible "forever",
-across all implementations, for objects created with the same `version`
-and `seed`.
+
+    `version is an integer in SUPPORTED_VERSIONS.
+
     `seed` is an integer >= 0 used to initialize the internal random number
 generator's state. Only the trailing bits are used - the state is typically
 very small.
 
-- `tinyrand.MAX_VERSION`
-
-    The largest version implemented.
+    It's intended that results be exactly reproducible "forever", across all
+implementations, for objects created with the same `version`and `seed`.
 
 - `tinyrand.DEFAULT_VERSION`
 
     The version returned if a version isn't passed to `get()`.
-
-- `tinyrand.SUPPORTED_VERSIONS`
-
-    List of all supported versions.
 
 ### Instance objects
 
@@ -89,4 +87,8 @@ It also has a few constants of minor interest:
 
 - `t.BITS`
 
-    The number of internal state bits.
+    The number of internal basic state bits.
+
+- `t.NSTATES`
+
+    The number of basic internal states == `2 ** t.BITS`.

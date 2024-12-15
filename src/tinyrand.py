@@ -1,12 +1,9 @@
 # Very simple 16-bit PRNG, self-contained, and needing nothing fancier
 # than 16x16->32 bit unsigned integer multiplication.
 
-MAX_VERSION = 1
-DEFAULT_VERSION = MAX_VERSION
-SUPPORTED_VERSIONS = [0, 1]
+DEFAULT_VERSION = 1
+SUPPORTED_VERSIONS = (0, 1)
 assert DEFAULT_VERSION in SUPPORTED_VERSIONS
-assert MAX_VERSION in SUPPORTED_VERSIONS
-assert 0 in SUPPORTED_VERSIONS
 
 class TinyRandBase:
     VERSION = None  # subclass must override

@@ -43,6 +43,8 @@ def format_seconds(s):
 def check(version):
     SEED = 42
     t = tinyrand.get(version, seed=SEED)
+
+    assert t.NSTATES == 1 << t.BITS
     first = t._get()
     full = {t._get() for i in range(t.NSTATES - 1)}
     full.add(first)
@@ -51,6 +53,7 @@ def check(version):
 
     t.seed(SEED)
     assert [t.get() for i in range(10)] == prefix[version]
+
 
 from math import factorial
 from collections import defaultdict
@@ -127,6 +130,12 @@ def check_chi2(t, n, FREQ=16):
     return d
 
 def drive(seed=0):
+    assert 666 not in tinyrand.SUPPORTED_VERSIONS
+    try:
+        t = tinyrand.get(version=666)
+    except ValueError:
+        pass
+
     for version in tinyrand.SUPPORTED_VERSIONS:
         print("\nversion =", version)
         check(version)
