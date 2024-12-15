@@ -72,7 +72,7 @@ After `t = tinyrand.get(...)`, `t` has one method of primary interest:
     `xs` is a list, which is randomly permuted in place. `None` is returned,
 as is the usual case for Python's mutating functions.
 
-    `ValueError` is raised if `len(a) > t.NSTATES`. This can't be used for very
+    `ValueError` is raised if `len(xs) > t.NSTATES`. This can't be used for very
 long lists. In the context of elections, this isn't a real limitation.
 
 Of less interest,
