@@ -18,7 +18,7 @@ t.shuffle(tiebreaker)
 Speed isn't important here. Code simplicity, portability, and reproducibilty are. Quality of results isn't especially important either. If all permutations of
 lists of length <= 10 are about equally likely, "good enough".
 
-## Docs
+## Python docs
 
 `tinyrand` supplies a few constants and a factory function.
 
