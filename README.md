@@ -26,15 +26,9 @@ permutations of lists of length <= 10 are about equally likely, "good enough".
 
 ## Versions
 
-In general, the more bits in the state, the higher quality the results.
-
-- 0: 16-bit state, and no int larger than a 32-bit unsigned int is created.
+- 0: 32-bit state, and no int larger than a 32-bit unsigned int is created.
 All implementations should support version 0.
 
-- 1: 26-bit state, and no int larger than a 52-bit unsigned int is created.
-This is for languages that use IEEE-754 "double precision" floats as their
-native "number" type, where unsgined ints through 53 bits can be represented
-exactly,
 
 ## Python docs
 

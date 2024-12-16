@@ -1,13 +1,15 @@
 # Very simple 16-bit PRNG, self-contained, and needing nothing fancier
 # than 16x16->32 bit unsigned integer multiplication.
 
-DEFAULT_VERSION = 1
-SUPPORTED_VERSIONS = (0, 1)
+DEFAULT_VERSION = 0
+SUPPORTED_VERSIONS = (0,)
 assert DEFAULT_VERSION in SUPPORTED_VERSIONS
+
+MASK32 = (1 << 32) - 1
 
 class TinyRandBase:
     VERSION = None  # subclass must override
-    BITS = 16       # number of state bits
+    BITS = 32       # number of state bits
     BD_BITS = 7     # table for Bays-Durham shuffle
 
     def __init__(self, seed=0):
@@ -26,15 +28,12 @@ class TinyRandBase:
         self.state = seed & self.MASK
         self.tab = [self._get() for i in range(self.BD_SIZE)]
         self.result = self._get()
+        self.grb_pending = self.grb_count = 0
 
     # Subclass must supply this, Note that NSTATES == 2**BITS,
     # and BITS must be >= 16.
     def _get(self):
-        """Return a random iot in range(NSTATES).
-
-        The period is NSTATES, and each possible result appears once
-        across the period.
-        """
+        """Return a random iot in range(NSTATES)."""
 
         raise NotImplementedError
 
@@ -80,29 +79,26 @@ class TinyRandBase:
 class TinyRand0(TinyRandBase):
     VERSION = 0
 
+    # xorshift32 from https://en.wikipedia.org/wiki/Xorshift
+    # Note that 0 isn't a possible output. In context that
+    # doesn't matter.
     def _get(self):
-        # An ordinary LCG.
-        # 43317 came from a table of multipliers with "good" spectral
-        # scores,
-        self.state = (self.state * 43317 + 1) & self.MASK
-        return self.state
+        x = self.state
+        x ^= (x << 13) & MASK32
+        x ^= x >> 17
+        x ^= (x << 5) & MASK32
+        self.state = x
+        return x
 
-        # A PCG-like trick to permute the output space, destroying the
-        # extreme regularity across the sequence of low-order bits
-        # Note: Bays-Durham shuffling looks strong enough on its own
-        # that this extra expense doesn't really help.
-        #return self.seed ^ (self.seed >> 7)
-
-class TinyRand1(TinyRand0):
-    VERSION = 1
-    BITS = 26
+    # Must avoid a 0 state.
+    def seed(self, seed=0):
+        super().seed(seed or 1)
 
 def get(version=DEFAULT_VERSION, seed=0):
     if version not in SUPPORTED_VERSIONS:
         raise ValueError("invalid version", version,
                          "must be in", SUPPORTED_VERSIONS)
     t =(TinyRand0,
-        TinyRand1,
        )[version](seed)
     assert version == t.VERSION
     return t

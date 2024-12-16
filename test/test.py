@@ -6,10 +6,8 @@ sys.path.insert(1, '../src')
 import tinyrand
 
 prefix = {
-    0: [10291, 33686, 18285, 43428, 60511,
-        1994, 28201, 62888, 23275, 54622],
-    1: [10037299, 10453910, 39995245, 1681828, 58453087,
-        47450058, 51408425, 28767656, 33774315, 43177310],
+    0: [3598423522, 3485745644, 2977953832, 1345907684, 2486396947,
+        2713533522, 2458585290, 1896816786, 3489566947, 3099959312],
     }
 
 # .05 and .95 chi square bounds
@@ -44,11 +42,11 @@ def check(version):
     SEED = 42
     t = tinyrand.get(version, seed=SEED)
     assert t.NSTATES == 1 << t.BITS
-    first = t._get()
-    full = {t._get() for i in range(t.NSTATES - 1)}
-    full.add(first)
-    assert len(full) == t.NSTATES
-    assert t._get() == first
+    N = 1_000_000
+    # chuck no duplicates acrss first N
+    assert N < t.NSTATES
+    full = {t._get() for i in range(N)}
+    assert len(full) == N
 
     t.seed(SEED)
     assert [t.get() for i in range(10)] == prefix[version]
