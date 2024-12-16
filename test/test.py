@@ -58,6 +58,15 @@ from math import factorial
 from collections import defaultdict
 from time import perf_counter as now
 
+def rankperm(a):
+    n = len(a)
+    result = 0
+    for i in range(n - 1):
+        lead = a[i]
+        nlt = sum(a[j] < lead for j in range(i + 1, n))
+        result += nlt * factorial(n - i - 1)
+    return result
+
 # Generate FREQ * factorial(n) shufflings of list(range(n)), and count
 # how many of each are found. The expected number of each is FREQ. The
 # actual distribution of counts follows a chi square distribution with
@@ -101,7 +110,7 @@ def check_chi2(t, n, FREQ=16):
         assert sorted(xs) == base
         tot = 0
         for x in xs:
-            tot = tot * 100 + x
+            tot = (tot << 4) + x
         d[tot] += 1
     print("total time", format_seconds(now() - start_time), " " * 40)
 
