@@ -90,9 +90,11 @@ class TinyRand0(TinyRandBase):
         self.state = x
         return x
 
-    # Must avoid a 0 state.
+    # Must avoid a 0 state. 0 ia a fixed point of ._get().
     def seed(self, seed=0):
         super().seed(seed or 1)
+        if not self.state:
+            super().seed(1)
 
 def get(version=DEFAULT_VERSION, seed=0):
     if version not in SUPPORTED_VERSIONS:
