@@ -28,7 +28,6 @@ class TinyRandBase:
         self.state = seed & self.MASK
         self.tab = [self._get() for i in range(self.BD_SIZE)]
         self.result = self._get()
-        self.grb_pending = self.grb_count = 0
 
     # Subclass must supply this, Note that NSTATES == 2**BITS,
     # and BITS must be >= 16.
