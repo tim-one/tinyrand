@@ -81,6 +81,11 @@ class TinyRand0(TinyRandBase):
     # xorshift32 from https://en.wikipedia.org/wiki/Xorshift
     # Note that 0 isn't a possible output. In context that
     # doesn't matter.
+    # The period is 2**32 - 1, and across the period each int in
+    # range(1, 2**32) is produced once.
+    # The low-order bits aren't high quality. In context that doesn't
+    # matter, because .getrandbits() only uses high-order bits of
+    # each result.
     def _get(self):
         x = self.state
         x ^= (x << 13) & MASK32

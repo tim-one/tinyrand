@@ -38,21 +38,40 @@ def format_seconds(s):
         s -= n * f
     return result + format(s, '.1f') + "s"
 
+fint = lambda n: format(n, ",")
+
+def get_period(t):
+    START = 123
+    t.state = START
+    tget = t._get
+    p = 0
+    target = target_inc = 100_000_000
+    while True:
+        p += 1
+        if p >= target:
+            print(fint(p), end="\r")
+            target += target_inc
+        g = tget()
+        assert g
+        if g == START:
+            break
+    return p
+
 def check(version):
     SEED = 42
     t = tinyrand.get(version, seed=SEED)
     assert t.NSTATES == 1 << t.BITS
-    N = 1_000_000
-    # chuck no duplicates acrss first N
-    assert N < t.NSTATES
-    full = {t._get() for i in range(N)}
-    assert len(full) == N
+
+    print("checking period")
+    p = get_period(t)
+    print(fint(p))
+    expected = {0: T32 - 1}[version]
+    assert p == expected, (p, expected)
 
     t.seed(SEED)
     assert [t.get() for i in range(10)] == prefix[version]
 
-
-from math import factorial
+from math import factorial, sqrt
 from collections import defaultdict
 from time import perf_counter as now
 
@@ -86,15 +105,20 @@ def rankperm(a):
 #
 # Note: so long as FREQ is a power of 2, the chi square statistic is
 # exactly representable as a binary float,
-def check_chi2(t, n, FREQ=16):
+T32 = 1 << 32
+
+def check_chi2(t, n, rng, try_all_seeds=False):
     f = factorial(n)
+    totaltrips = len(rng)
+    freq = totaltrips / f
+    print(f"{f=:,} {freq=:.2f} {rng=!r:} {totaltrips=:,} {try_all_seeds=:}")
+
     base = list(range(n))
     d = defaultdict(int)
-    totaltrips = FREQ * f
     ntrips = 0
     limit = limit_inc = 1_000_000
     start_time = now()
-    for i in range(totaltrips):
+    for i in rng:
         ntrips += 1
         if ntrips >= limit:
             pdone = ntrips / totaltrips
@@ -104,8 +128,10 @@ def check_chi2(t, n, FREQ=16):
                   end="           \r")
             limit += limit_inc
         xs = base[:]
+        if try_all_seeds:
+            t.seed(i)
         t.shuffle(xs)
-        assert sorted(xs) == base
+        #assert sorted(xs) == base
         tot = 0
         for x in xs:
             tot = (tot << 4) + x
@@ -117,9 +143,12 @@ def check_chi2(t, n, FREQ=16):
     chisq = 0
     if missing > 0:
         print(missing, "missing")
-        chisq = missing * FREQ
-    chisq += sum((got - FREQ)**2 / FREQ for got in d.values())
-    print("df", f - 1, "chisq", chisq)
+        chisq = missing * freq
+    chisq += sum((got - freq)**2 / freq for got in d.values())
+    df = f - 1
+    sdev = sqrt(2.0 * df) or 1.0
+    z = (chisq - df) / sdev
+    print(f"{df=:,} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}")
     if n in n2chi:
         lo, hi = n2chi[n]
         assert lo < hi
@@ -133,7 +162,6 @@ def check_chi2(t, n, FREQ=16):
             else:
                 assert hi < chisq
                 print("greater than 95% bound", chisq, ">", hi)
-    return d
 
 def drive(seed=0):
     assert 666 not in tinyrand.SUPPORTED_VERSIONS
@@ -148,8 +176,18 @@ def drive(seed=0):
         t = tinyrand.get(version, seed)
         for n in range(1, 12):
             print("\nversion", version, "n", n)
-            k = check_chi2(t, n)
+            k = check_chi2(t, n, range(factorial(n) * 16))
             del k
+
+def drive2():
+    for version in tinyrand.SUPPORTED_VERSIONS:
+        print("\nversion", version)
+        t = tinyrand.get(version)
+        for n in range(2, 12):
+            print("\nversion", version, "n", n)
+            rng = range(1, T32)
+            check_chi2(t, n, rng, True)
 
 if __name__ == "__main__":
     drive()
+    #drive2()
