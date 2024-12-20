@@ -5,9 +5,12 @@ sys.path.insert(1, '../src')
 
 import tinyrand
 
+T32 = 1 << 32
+MASK32 = T32 - 1
+
 prefix = {
-    0: [3598423522, 3485745644, 2977953832, 1345907684, 2486396947,
-        2713533522, 2458585290, 1896816786, 3489566947, 3099959312],
+    0: [2975584321, 1915941066, 2870739003, 2578514367, 4127658768,
+        324409786, 1476451891, 1236111477, 2281477571, 616879951],
     }
 
 # .05 and .95 chi square bounds
@@ -25,25 +28,25 @@ n2chi = {
     11: (39902104.0, 39931496.0),
     }
 
-units = (('d', 3600.0 * 24),
-         ('h', 3600.0),
-         ('m', 60.0))
+units = (('d', 3600 * 24),
+         ('h', 3600),
+         ('m', 60),
+        )
 
 def format_seconds(s):
-    result = ""
+    result = []
+    n, tenths = divmod(round(s * 10.0), 10)
     for tag, f in units:
-        n = int(s / f)
-        if n or result:
-            result += str(n) + tag
-        s -= n * f
-    return result + format(s, '.1f') + "s"
+        w, n = divmod(n, f)
+        if w or result:
+            result.extend((w, tag))
+    result.extend((n, '.', tenths, 's'))
+    return ''.join(map(str, result))
 
 fint = lambda n: format(n, ",")
 
-def get_period(t):
-    START = 123
-    t.state = START
-    tget = t._get
+def get_period():
+    x = START = 123
     p = 0
     target = target_inc = 100_000_000
     while True:
@@ -51,9 +54,8 @@ def get_period(t):
         if p >= target:
             print(fint(p), end="\r")
             target += target_inc
-        g = tget()
-        assert g
-        if g == START:
+        x = (121525 * x + 386076519) & MASK32
+        if x == START:
             break
     return p
 
@@ -62,14 +64,14 @@ def check(version):
     t = tinyrand.get(version, seed=SEED)
     assert t.NSTATES == 1 << t.BITS
 
-    print("checking period")
-    p = get_period(t)
-    print(fint(p))
-    expected = {0: T32 - 1}[version]
-    assert p == expected, (p, expected)
-
+    assert [t._get() for i in range(10)] == prefix[version]
     t.seed(SEED)
-    assert [t.get() for i in range(10)] == prefix[version]
+    assert [t._get() for i in range(10)] == prefix[version]
+
+    print("checking period")
+    p = get_period()
+    print(fint(p))
+    assert p == T32
 
 from math import factorial, sqrt
 from collections import defaultdict
@@ -111,7 +113,8 @@ def check_chi2(t, n, rng, try_all_seeds=False):
     f = factorial(n)
     totaltrips = len(rng)
     freq = totaltrips / f
-    print(f"{f=:,} {freq=:.2f} {rng=!r:} {totaltrips=:,} {try_all_seeds=:}")
+    st = f"{f=:,} {freq=:.2f} {rng=!r:} {totaltrips=:,} {try_all_seeds=:}"
+    print(st)
 
     base = list(range(n))
     d = defaultdict(int)
@@ -148,7 +151,8 @@ def check_chi2(t, n, rng, try_all_seeds=False):
     df = f - 1
     sdev = sqrt(2.0 * df) or 1.0
     z = (chisq - df) / sdev
-    print(f"{df=:,} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}")
+    st2 = f"{df=:,} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
+    print(st2)
     if n in n2chi:
         lo, hi = n2chi[n]
         assert lo < hi
@@ -157,11 +161,17 @@ def check_chi2(t, n, rng, try_all_seeds=False):
         else:
             print()
             print("*** WARNING *** suspicious chi square ***")
+            print(st, file=fout)
+            print(st2, file=fout)
             if lo > chisq:
-                print("less than 5% bound", chisq, "<", lo)
+                st = f"less than 5% bound {chisq} < {lo}"
+                print()
             else:
                 assert hi < chisq
-                print("greater than 95% bound", chisq, ">", hi)
+                st = f"greater than 95% bound {chisq} > {hi}"
+            print(st)
+            print(st, file=fout)
+    fout.flush()
 
 def drive(seed=0):
     assert 666 not in tinyrand.SUPPORTED_VERSIONS
@@ -179,15 +189,64 @@ def drive(seed=0):
             k = check_chi2(t, n, range(factorial(n) * 16))
             del k
 
-def drive2():
+def drive2(which):
+    SPLIT = 10
     for version in tinyrand.SUPPORTED_VERSIONS:
         print("\nversion", version)
         t = tinyrand.get(version)
-        for n in range(2, 12):
-            print("\nversion", version, "n", n)
-            rng = range(1, T32)
-            check_chi2(t, n, rng, True)
+        if which == 1:
+            n2s = {n : 0 for n in range(2, SPLIT)}
+        elif which == 2:
+            n2s = {n : 0 for n in range(SPLIT, 12)}
+        else:
+            assert False, which
+        new_n2s = {}
+        start_time = now()
+        ATLEAST = 100_000_000
+        didone = True
+        while n2s:
+            new_n2s.clear()
+            for n, start in n2s.items():
+                if start >= T32:
+                    continue
+                min_need = factorial(n) * 16
+                stop = start + min_need
+                if stop < T32:
+                    if min_need < ATLEAST:
+                        stop = min(start + ATLEAST, T32)
+                    if T32 - stop < min_need:
+                        stop = T32
+                new_n2s[n] = stop
+                print("\nversion", version, "n", n)
+                check_chi2(t, n, range(start, stop), True)
+                print("total elapsed", format_seconds(now() - start_time))
+            n2s = new_n2s.copy()
+
+##        for n in range(2, 12):
+##            print("\nversion", version, "n", n)
+##            rng = range(1, T32)
+##            check_chi2(t, n, rng, True)
+
+def bigdrive(which):
+    import os
+    global fout
+    assert which in range(3)
+    fn = f"/Code/fout{which}.txt"
+    fnbak = fn + ".bak"
+    if os.path.exists(fn):
+        if os.path.exists(fnbak):
+            print("removing", fnbak)
+            os.remove(fnbak)
+        print("renaming", fn, "to", fnbak)
+        os.rename(fn, fnbak)
+    fout = open(fn, "w")
+    if which == 0:
+        drive()
+    else:
+        drive2(which)
+    fout.close()
 
 if __name__ == "__main__":
-    drive()
-    #drive2()
+    start = now()
+    bigdrive(0)
+    print("total elapsed", format_seconds(now() - start))
