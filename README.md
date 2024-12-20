@@ -126,7 +126,7 @@ In Python,
 [2975584321, 1915941066, 2870739003, 2578514367, 4127658768, 324409786, 1476451891, 1236111477, 2281477571, 616879951]
 ```
 
-You ran also check these permuations:
+You can also check these permuations:
 
 ```python
 >>> t =tinyrand.get(0, 42)
