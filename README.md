@@ -91,7 +91,7 @@ It also has a few constants of minor interest:
 
 - `t.NSTATES`
 
-    The total number of distinct seeds == `2 ** t.BITS`.
+    The total number of distinct seeds = 2<sup>BITS</sup>.
 
 ## Testing a new implementation
 
