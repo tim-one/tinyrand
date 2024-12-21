@@ -132,7 +132,7 @@ class TinyRand0(TinyRandBase):
         # to spray a 32-bit seed across 128 bits of state. While it's
         # fine as-is, there are nevertheless visible correlations across
         # the first few outputs given seeds that are close together,
-        # i.e. like seed and seed+1. Running the generate a handful of
+        # i.e. like seed and seed+1. Running the generator a handful of
         # times does a much better job of scrambling the full state.
         for i in range(6):
             self._get()

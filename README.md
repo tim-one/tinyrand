@@ -129,21 +129,31 @@ In Python,
 You can also check these permuations:
 
 ```python
->>> t =tinyrand.get(0, 42)
->>> t.seed(42)
->>> for i in range(10):
-...     xs = list(range(20))
-...     t.shuffle(xs)
-...     print(xs)
-...
-[5, 14, 9, 13, 15, 11, 3, 18, 8, 7, 6, 17, 1, 12, 19, 4, 2, 0, 10, 16]
-[16, 14, 9, 13, 0, 4, 12, 19, 10, 11, 8, 1, 15, 5, 2, 3, 6, 17, 18, 7]
-[11, 6, 14, 13, 4, 5, 3, 17, 12, 10, 0, 9, 2, 7, 18, 1, 16, 8, 15, 19]
-[19, 18, 7, 14, 4, 0, 6, 5, 9, 8, 3, 16, 2, 11, 10, 17, 15, 1, 13, 12]
-[16, 10, 12, 15, 8, 4, 6, 13, 0, 7, 2, 19, 5, 11, 18, 9, 14, 3, 1, 17]
-[7, 10, 2, 17, 13, 4, 3, 11, 12, 8, 6, 9, 15, 1, 18, 16, 19, 0, 5, 14]
-[13, 4, 7, 19, 0, 18, 15, 1, 12, 17, 5, 2, 10, 6, 9, 14, 11, 16, 8, 3]
-[13, 6, 9, 16, 12, 0, 14, 15, 1, 5, 17, 8, 18, 3, 11, 2, 7, 19, 10, 4]
-[9, 5, 12, 6, 1, 10, 3, 18, 11, 14, 16, 15, 13, 4, 7, 0, 2, 19, 17, 8]
-[3, 14, 12, 1, 18, 6, 11, 9, 17, 5, 15, 8, 0, 7, 16, 2, 13, 4, 10, 19]
+def blah(version, SEED):
+    letters = list('abcdefghijklmnopqrstuvwxyz')
+    assert len(letters) == 26
+    assert len(set(letters)) == 26
+    t = tinyrand.get(version, SEED)
+
+    def getone():
+        xs = letters.copy()
+        t.shuffle(xs)
+        return ''.join(xs)
+    for _ in range(10):
+        print(getone())
+
+blah(0. 42)
+```
+displays:
+```
+yojnpldsihgubxteczkqrfmwva
+ivdleyxqpkhfmbcszwrugtjnao
+utcmjevqlxwyazbsdknpohfirg
+rsbxdtcmepiqflyhzognjkvuwa
+vcmgphafiznqxlejuktdsorwby
+pelsocnbhativxrfkwdjugmqzy
+hukoawzxjtbmdipgfrelcynqvs
+yiltkvxpfmcuoghjazqerdbwns
+gkniojhfsamturzxwebycqvpdl
+tfdykvzomnbuhplgcisejxqraw
 ```
