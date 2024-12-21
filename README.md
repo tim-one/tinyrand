@@ -141,6 +141,7 @@ def blah(version, SEED):
         xs = letters.copy()
         t.shuffle(xs)
         return ''.join(xs)
+
     for _ in range(10):
         print(getone())
 
