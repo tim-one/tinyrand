@@ -36,6 +36,21 @@ n2chi = {
     11: (39902104.0, 39931496.0),
     }
 
+if 1:
+    from mpmath import gammainc
+    from math import factorial
+
+    # To get this to work for large n!, had to add this to
+    # mpmath\functions\hypergeometric.py" in _hyp1f1:
+    #     kwargs['maxterms'] = 100_000
+    def chi2(x, v):
+        return float(gammainc(v/2, 0, x/2, True))
+
+##    for n, (lo, hi) in n2chi.items():
+##        v = factorial(n) - 1
+##        print(n, "lo", chi2(lo, v))
+##        print(n, "hi", chi2(hi, v))
+
 units = (('d', 3600 * 24),
          ('h', 3600),
          ('m', 60),
@@ -174,9 +189,11 @@ def check_chi2(t, n, rng, try_all_seeds=False):
     df = f - 1
     sdev = sqrt(2.0 * df) or 1.0
     z = (chisq - df) / sdev
-    st2 = f"{df=:,} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
+    p = chi2(chisq, df)
+    st2 = f"{p:9.4%} v{t.VERSION} n{n} {df=} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
     print(st2)
     if n in n2chi:
+        print(st2, st, file=fout, flush=True)
         lo, hi = n2chi[n]
         assert lo < hi
         if lo <= chisq <= hi:
@@ -184,17 +201,12 @@ def check_chi2(t, n, rng, try_all_seeds=False):
         else:
             print()
             print("*** WARNING *** suspicious chi square ***")
-            print(st, file=fout)
-            print(st2, file=fout)
             if lo > chisq:
-                st = f"less than 5% bound {chisq} < {lo}"
+                print(f"less than 5% bound {chisq} < {lo}")
                 print()
             else:
                 assert hi < chisq
-                st = f"greater than 95% bound {chisq} > {hi}"
-            print(st)
-            print(st, file=fout)
-    fout.flush()
+                print(f"greater than 95% bound {chisq} > {hi}")
 
 def drive(seed=0):
     assert 666 not in tinyrand.SUPPORTED_VERSIONS

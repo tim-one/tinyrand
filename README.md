@@ -131,7 +131,7 @@ In Python,
 You can also check these permuations:
 
 ```python
-def blah(version, SEED):
+def drive(version, SEED):
     letters = list('abcdefghijklmnopqrstuvwxyz')
     assert len(letters) == 26
     assert len(set(letters)) == 26
@@ -145,7 +145,7 @@ def blah(version, SEED):
     for _ in range(10):
         print(getone())
 
-blah(0. 42)
+drive(0. 42)
 ```
 displays:
 ```
