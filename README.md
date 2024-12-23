@@ -128,7 +128,7 @@ In Python,
  324409786, 1476451891, 1236111477, 2281477571, 616879951]
 ```
 
-You can also check these permuations:
+You can also check these permutations:
 
 ```python
 def drive(version, SEED):
