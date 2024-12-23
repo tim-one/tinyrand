@@ -42,7 +42,7 @@ if 1:
 
     # To get this to work for large n!, had to add this to
     # mpmath\functions\hypergeometric.py" in _hyp1f1:
-    #     kwargs['maxterms'] = 100_000
+    #     kwargs['maxterms'] = 500_000
     def chi2(x, v):
         return float(gammainc(v/2, 0, x/2, True))
 
@@ -124,6 +124,31 @@ def rankperm(a):
         result += nlt * factorial(n - i - 1)
     return result
 
+def makepc(hi):
+    from itertools import islice
+    pc = [0]
+    todo = hi - 1
+    while todo > 0:
+        take = min(todo, len(pc))
+        pc.extend(i + 1 for i in islice(pc, take))
+        todo -= take
+    return pc
+
+N = 13
+pc = makepc(2**N)
+
+from math import factorial
+fac = [factorial(i) for i in range(N)]
+bit = [1 << i for i in range(N)]
+lomask = [i - 1 for i in bit]
+
+def rank(p):
+    result = present = 0
+    for i, d in enumerate(reversed(p)):
+        result += pc[present & lomask[d]] * fac[i]
+        present |= bit[d]
+    return result
+
 # Generate FREQ * factorial(n) shufflings of list(range(n)), and count
 # how many of each are found. The expected number of each is FREQ. The
 # actual distribution of counts follows a chi square distribution with
@@ -148,16 +173,19 @@ def rankperm(a):
 T32 = 1 << 32
 
 def check_chi2(t, n, rng, try_all_seeds=False):
+    import array
+
     f = factorial(n)
     totaltrips = len(rng)
     freq = totaltrips / f
     st = f"{f=:,} {freq=:.2f} {rng=!r:} {totaltrips=:,} {try_all_seeds=:}"
     print(st)
 
+    d = array.array('L', [0]) * f
+
     base = list(range(n))
-    d = defaultdict(int)
     ntrips = 0
-    limit = limit_inc = 1_000_000
+    limit = limit_inc = 2_000_000
     start_time = now()
     for i in rng:
         ntrips += 1
@@ -173,23 +201,24 @@ def check_chi2(t, n, rng, try_all_seeds=False):
             t.seed(i)
         t.shuffle(xs)
         #assert sorted(xs) == base
-        tot = 0
-        for x in xs:
-            tot = (tot << 4) + x
-        d[tot] += 1
+        d[rank(xs)] += 1
     print("total time", format_seconds(now() - start_time), " " * 40)
 
-    missing = f - len(d)
-    assert missing >= 0
     chisq = 0
-    if missing > 0:
-        print(missing, "missing")
-        chisq = missing * freq
-    chisq += sum((got - freq)**2 / freq for got in d.values())
+    chisq += sum((got - freq)**2 / freq for got in d)
     df = f - 1
     sdev = sqrt(2.0 * df) or 1.0
     z = (chisq - df) / sdev
+
+    if n == 12:
+        print("trying ch2")
+        st2 = f"v{t.VERSION} n{n} {df=} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
+        print(st2)
+        chis = now()
     p = chi2(chisq, df)
+    if n == 12:
+        print("done", format_seconds(now() - chis))
+
     st2 = f"{p:9.4%} v{t.VERSION} n{n} {df=} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
     print(st2)
     if n in n2chi:
@@ -219,7 +248,7 @@ def drive(seed=0):
         print("\nversion", version)
         check(version)
         t = tinyrand.get(version, seed)
-        for n in range(1, 12):
+        for n in range(1, 13):
             print("\nversion", version, "n", n)
             k = check_chi2(t, n, range(factorial(n) * 16))
             del k
@@ -232,7 +261,7 @@ def drive2(which):
         if which == 1:
             n2s = {n : 0 for n in range(2, SPLIT)}
         elif which == 2:
-            n2s = {n : 0 for n in range(SPLIT, 12)}
+            n2s = {n : 0 for n in range(SPLIT, 13)}
         else:
             assert False, which
         new_n2s = {}
@@ -245,7 +274,7 @@ def drive2(which):
                 if start >= T32:
                     continue
                 min_need = factorial(n) * 16
-                stop = start + min_need
+                stop = min(start + min_need, T32)
                 if stop < T32:
                     if min_need < ATLEAST:
                         stop = min(start + ATLEAST, T32)
@@ -277,6 +306,10 @@ def bigdrive(which):
     fout.close()
 
 if __name__ == "__main__":
+    import sys
+    which = 0
+    if len(sys.argv) > 1:
+        which = int(sys.argv[1])
     start = now()
-    bigdrive(0)
+    bigdrive(which)
     print("total elapsed", format_seconds(now() - start))
