@@ -4,6 +4,7 @@ import sys
 sys.path.insert(1, '../src')
 
 import tinyrand
+import array
 
 T32 = 1 << 32
 MASK32 = T32 - 1
@@ -115,18 +116,9 @@ from math import factorial, sqrt
 from collections import defaultdict
 from time import perf_counter as now
 
-def rankperm(a):
-    n = len(a)
-    result = 0
-    for i in range(n - 1):
-        lead = a[i]
-        nlt = sum(a[j] < lead for j in range(i + 1, n))
-        result += nlt * factorial(n - i - 1)
-    return result
-
 def makepc(hi):
     from itertools import islice
-    pc = [0]
+    pc = array.array('B', [0])
     todo = hi - 1
     while todo > 0:
         take = min(todo, len(pc))
@@ -136,17 +128,14 @@ def makepc(hi):
 
 N = 13
 pc = makepc(2**N)
-
-from math import factorial
 fac = [factorial(i) for i in range(N)]
-bit = [1 << i for i in range(N)]
-lomask = [i - 1 for i in bit]
 
 def rank(p):
     result = present = 0
     for i, d in enumerate(reversed(p)):
-        result += pc[present & lomask[d]] * fac[i]
-        present |= bit[d]
+        bit = 1 << d
+        result += pc[present & (bit - 1)] * fac[i]
+        present |= bit
     return result
 
 # Generate FREQ * factorial(n) shufflings of list(range(n)), and count
@@ -254,7 +243,7 @@ def drive(seed=0):
             del k
 
 def drive2(which):
-    SPLIT = 10
+    SPLIT = 9
     for version in tinyrand.SUPPORTED_VERSIONS:
         print("\nversion", version)
         t = tinyrand.get(version)
