@@ -35,6 +35,7 @@ n2chi = {
     9: (361478.8635991877, 364281.4104580742),
     10: (3624368.913253256, 3633231.360808264),
     11: (39902104.0, 39931496.0),
+    12: (478950688.0, 479052512.0),
     }
 
 if 1:
@@ -193,8 +194,7 @@ def check_chi2(t, n, rng, try_all_seeds=False):
         d[rank(xs)] += 1
     print("total time", format_seconds(now() - start_time), " " * 40)
 
-    chisq = 0
-    chisq += sum((got - freq)**2 / freq for got in d)
+    chisq = sum((got - freq)**2 for got in d) / freq
     df = f - 1
     sdev = sqrt(2.0 * df) or 1.0
     z = (chisq - df) / sdev
