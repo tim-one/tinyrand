@@ -4,7 +4,7 @@ import sys
 sys.path.insert(1, '../src')
 
 import tinyrand
-import array
+import array, itertools
 
 T32 = 1 << 32
 MASK32 = T32 - 1
@@ -13,6 +13,8 @@ prefix = {
     0: [2975584321, 1915941066, 2870739003, 2578514367, 4127658768,
         324409786, 1476451891, 1236111477, 2281477571, 616879951],
     }
+
+HIDENSEN = 12
 
 canned_shuffles = {
     0: ['yojnpldsihgubxteczkqrfmwva', 'ivdleyxqpkhfmbcszwrugtjnao',
@@ -37,6 +39,7 @@ n2chi = {
     11: (39902104.0, 39931496.0),
     12: (478950688.0, 479052512.0),
     }
+assert HIDENSEN in n2chi
 
 if 1:
     from mpmath import gammainc
@@ -226,6 +229,45 @@ def check_chi2(t, n, rng, try_all_seeds=False):
                 assert hi < chisq
                 print(f"greater than 95% bound {chisq} > {hi}")
 
+def check_chi3(t, n, freq, rng):
+    import array
+
+    totaltrips = len(rng)
+    st = f"{freq=:.2f} {rng=!r:} {totaltrips=:,}"
+    print(st)
+    df = n - 1
+
+    ds = [array.array('H', [0]) * n for i in range(n)]
+    sdev = sqrt(2.0 * df) or 1.0
+
+    base = list(range(n))
+    ntrips = 0
+    limit = limit_inc = 100_000_000 // n
+    start_time = now()
+    for i in rng:
+        ntrips += 1
+        if ntrips >= limit:
+            pdone = ntrips / totaltrips
+            elapsed = now() - start_time
+            eta = elapsed / ntrips * (totaltrips - ntrips)
+            print(f"{pdone:.1%} done; eta {format_seconds(eta)}",
+                  end="           \r")
+            limit += limit_inc
+        xs = base[:]
+        t.shuffle(xs)
+        #assert sorted(xs) == base
+        for i, j in enumerate(xs):
+            ds[i][j] += 1
+    print("total time", format_seconds(now() - start_time), " " * 40)
+
+    for i, d in enumerate(ds):
+        chisq = sum((got - freq)**2 for got in d) / freq
+        z = (chisq - df) / sdev
+        p = chi2(chisq, df)
+        st2 = f"{p:9.4%} v{t.VERSION} n{n} pos{i} {df=} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
+        print(st2)
+        print(st2, st, file=fout, flush=True)
+
 def drive(seed=0):
     assert 666 not in tinyrand.SUPPORTED_VERSIONS
     try:
@@ -237,7 +279,7 @@ def drive(seed=0):
         print("\nversion", version)
         check(version)
         t = tinyrand.get(version, seed)
-        for n in range(1, 13):
+        for n in range(1, HIDENSEN + 1):
             print("\nversion", version, "n", n)
             k = check_chi2(t, n, range(factorial(n) * 16))
             del k
@@ -250,7 +292,7 @@ def drive2(which):
         if which == 1:
             n2s = {n : 0 for n in range(2, SPLIT)}
         elif which == 2:
-            n2s = {n : 0 for n in range(SPLIT, 13)}
+            n2s = {n : 0 for n in range(SPLIT, HIDENSEN + 1)}
         else:
             assert False, which
         new_n2s = {}
@@ -275,12 +317,37 @@ def drive2(which):
                 print("total elapsed", format_seconds(now() - start_time))
             n2s = new_n2s.copy()
 
-def bigdrive(which):
+# There's not enough TAM or time in the universe to exhaustively test
+# "large" lists. 12 is the highest I can get away with. But we can do
+# simple tests. Here, we shuffle range(n) n * F times. Then every
+# element should appear in every position about F times. That can't
+# catch many kinds of subtle problems, but does a great job at catching
+# gross problems.
+
+def drive3(seed=0):
+    F = 50
+    for version in tinyrand.SUPPORTED_VERSIONS:
+        print("\nversion", version)
+        t = tinyrand.get(version, seed)
+        start_time = now()
+        for n in itertools.chain(range(1, HIDENSEN + 1),
+                                 [52, 100, 1000, 10000]):
+            print("\nversion", version, "n", n)
+            check_chi3(t, n, float(F), range(F * n))
+        print("total elapsed", format_seconds(now() - start_time))
+
+def bigdrive(read, which):
     import os
     global fout
-    assert which in range(3)
-    fn = f"/Code/fout{which}.txt"
-    fnbak = fn + ".bak"
+    assert which in range(4)
+    head = "/Code/"
+    tail = f"fout{which}.txt"
+    fn = head + tail
+    if read:
+        fd(fn)
+        return
+    tailbak = tail + ".bak"
+    fnbak = head + tailbak
     if os.path.exists(fn):
         if os.path.exists(fnbak):
             print("removing", fnbak)
@@ -290,15 +357,36 @@ def bigdrive(which):
     fout = open(fn, "w")
     if which == 0:
         drive()
+    elif which == 3:
+        drive3()
     else:
         drive2(which)
     fout.close()
+
+def fd(fn):
+    bins = [0] * 20
+    with open(fn) as f:
+        for line in f:
+            first = line.split(maxsplit=1)[0]
+            assert first.endswith('%')
+            p = float(first[:-1])
+            bins[int(p / 5.0)] += 1
+    tot = sum(bins)
+    df = len(bins) - 1
+    freq = tot / len(bins)
+    chisq = sum((freq - got) ** 2 / freq for got in bins)
+    print(bins)
+    print(f"{tot=} {df=} {freq=} {chisq=} {chi2(chisq, df)=}")
 
 if __name__ == "__main__":
     import sys
     which = 0
     if len(sys.argv) > 1:
-        which = int(sys.argv[1])
+        read = sys.argv[1] == "r"
+        if read:
+            del sys.argv[1]
+        if len(sys.argv) > 1:
+           which = int(sys.argv[1])
     start = now()
-    bigdrive(which)
+    bigdrive(read, which)
     print("total elapsed", format_seconds(now() - start))
