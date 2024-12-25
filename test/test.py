@@ -200,17 +200,13 @@ def check_chi2(t, n, rng, try_all_seeds=False):
     chisq = sum((got - freq)**2 for got in d) / freq
     df = f - 1
     sdev = sqrt(2.0 * df) or 1.0
+    missing = d.count(0)
+    if missing:
+        print()
+        print('*' * 50, missing, "missing")
+        print()
     z = (chisq - df) / sdev
-
-    if n == 12:
-        print("trying ch2")
-        st2 = f"v{t.VERSION} n{n} {df=} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
-        print(st2)
-        chis = now()
     p = chi2(chisq, df)
-    if n == 12:
-        print("done", format_seconds(now() - chis))
-
     st2 = f"{p:9.4%} v{t.VERSION} n{n} {df=} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
     print(st2)
     if n in n2chi:
