@@ -345,14 +345,11 @@ def bigdrive(read, which):
     import os
     global fout
     assert which in range(4)
-    head = "/Code/"
-    tail = f"fout{which}.txt"
-    fn = head + tail
+    fn = f"/Code/fout{which}.txt"
     if read:
         fd(fn)
         return
-    tailbak = tail + ".bak"
-    fnbak = head + tailbak
+    fnbak = fn + ".bak"
     if os.path.exists(fn):
         if os.path.exists(fnbak):
             print("removing", fnbak)
