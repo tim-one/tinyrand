@@ -95,6 +95,15 @@ def check(version):
     assert [t._get() for i in range(10)] == prefix[version]
     t.seed(SEED)
     assert [t._get() for i in range(10)] == prefix[version]
+    t.seed(SEED + (123 << 32)) # xhwxk that only last 32 bits count
+    assert [t._get() for i in range(10)] == prefix[version]
+
+    try:
+        t.seed(-1)
+    except ValueError:
+        pass
+    else:
+        raise ValueError("negative seed should have raised")
 
     letters = list('abcdefghijklmnopqrstuvwxyz')
     assert len(letters) == 26
