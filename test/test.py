@@ -310,12 +310,9 @@ def drive2(which):
                 if start >= T32:
                     continue
                 min_need = factorial(n) * 16
-                stop = min(start + min_need, T32)
-                if stop < T32:
-                    if min_need < ATLEAST:
-                        stop = min(start + ATLEAST, T32)
-                    if T32 - stop < min_need:
-                        stop = T32
+                stop = min(start + max(ATLEAST, min_need), T32)
+                if T32 - stop < min_need:
+                    stop = T32
                 new_n2s[n] = stop
                 print("\nversion", version, "n", n)
                 check_chi2(t, n, range(start, stop), True)

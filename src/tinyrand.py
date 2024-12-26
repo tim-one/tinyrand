@@ -6,24 +6,18 @@ MASK32 = (1 << 32) - 1
 
 class TinyRandBase:
     VERSION = None  # subclass must override
-    BITS = 32       # number of state bits
-##    BD_BITS = 4     # table for Bays-Durham shuffle
-##    BD_SIZE = 1 << BD_SIZE
+    BITS = 32       # number of seed bits
+
     def __init__(self, seed=0):
         assert self.BITS >= 16
         self.NSTATES = 1 << self.BITS
         self.MASK = self.NSTATES - 1
-##        assert self.BD_BITS <= self.BITS
-##        self.BD_SIZE = 1 << self.BD_BITS
-##        self.BD_MASK = self.BD_SIZE - 1
 
         self.seed(seed)
 
     # Subclass must override
     def seed(self):
         raise NotImplementedError
-##        self.tab = [self._get() for i in range(self.BD_SIZE)]
-##        self.result = self._get()
 
     # Subclass must supply this, Note that NSTATES == 2**BITS,
     # and BITS must be >= 16.
@@ -31,23 +25,6 @@ class TinyRandBase:
         """Return a random iot in range(NSTATES)."""
 
         raise NotImplementedError
-
-##    # Bays-Durham shuffle of the base LCG. This increases the period
-##    # and breaks up the extreme regularity of the LCG's low-order bits.
-##    def get(self):
-##        result = self.result
-##        i = result & self.BD_MASK
-##        self.result = self.tab[i]
-##        self.tab[i] = self._get()
-##        return result
-##
-##    # Return random int that fits in at most `n` bits.
-##    # IOW, a random int in range(2**n).
-##    # 1 <= n <= BITS required. In context, this is meant to be a helper
-##    # for `shuffle()`. Of course it _could_ bw made fancier.
-##    def getrandbits(self, n):
-##        assert 1 <= n <= self.BITS
-##        return self._get() >> (self.BITS - n)
 
     # A "forward" version of Fisher-Yates. Python's `shuffle()` is the
     # more common "backward" version, but that benefits a lot from
@@ -136,8 +113,6 @@ class TinyRand0(TinyRandBase):
         # times does a much better job of scrambling the full state.
         for i in range(6):
             self._get()
-
-##        super().seed()
 
 def get(version=DEFAULT_VERSION, seed=0):
     if version not in SUPPORTED_VERSIONS:
