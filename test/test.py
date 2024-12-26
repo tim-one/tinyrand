@@ -293,7 +293,7 @@ def check_chi3(t, n, freq, rng):
         chisq = sum((got - freq)**2 for got in d) / freq
         z = (chisq - df) / sdev
         p = chi2(chisq, df)
-        st2 = f"{p:9.4%} v{t.VERSION} n{n} pos{i} {df=} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
+        st2 = f"{p:9.4%} v{t.VERSION} n{n} pos{i} {df=} {freq=:.2f} {chisq=:.2f} {sdev=:.2f} {z=:+.2f}"
         print(st2)
         print(st2, st, file=fout, flush=True)
 
