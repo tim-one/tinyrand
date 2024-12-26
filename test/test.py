@@ -120,6 +120,9 @@ def check(version):
         got = [getone() for _ in range(len(expect))]
         assert got == expect, got
 
+    for n in range(1, 10):
+        checkperms(n)
+
     print("checking period")
     p = get_period()
     print(fint(p))
@@ -142,14 +145,35 @@ def makepc(hi):
 N = 13
 pc = makepc(2**N)
 fac = [factorial(i) for i in range(N)]
+bit = [1 << i for i in range(N)]
+lomask = [i - 1 for i in bit]
 
 def rank(p):
     result = present = 0
     for i, d in enumerate(reversed(p)):
-        bit = 1 << d
-        result += pc[present & (bit - 1)] * fac[i]
-        present |= bit
+        result += pc[present & lomask[d]] * fac[i]
+        present |= bit[d]
     return result
+
+def unrank(q, n):
+    avail = list(range(n))
+    result = []
+    while len(avail) > 1:
+        n -= 1
+        r, q = divmod(q, fac[n])
+        result.append(avail.pop(r))
+    result.append(avail[0])
+    return result
+
+def checkperms(n):
+    for i, p in enumerate(itertools.permutations(range(n))):
+        r = rank(p)
+        assert i == r, (i, r)
+        s = unrank(r, n)
+        if p != tuple(s):
+            print(r)
+            print(s)
+            assert False
 
 # Generate FREQ * factorial(n) shufflings of list(range(n)), and count
 # how many of each are found. The expected number of each is FREQ. The
