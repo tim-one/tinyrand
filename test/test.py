@@ -266,7 +266,7 @@ def check_chi3(t, n, freq, rng):
     print(st)
     df = n - 1
 
-    ds = [array.array('H', [0]) * n for i in range(n)]
+    ds = [array.array('B', [0]) * n for i in range(n)]
     sdev = sqrt(2.0 * df) or 1.0
 
     base = list(range(n))
