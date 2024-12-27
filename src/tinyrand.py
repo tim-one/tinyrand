@@ -100,7 +100,7 @@ class TinyRand0(TinyRandBase):
         # Initialize with an ordinary LCG.
         # The multiplier does well on the spectral test, but more
         # importantly fits in 17 bits. THe product therefore fits in 49
-        # bits, so will be computed exactly in languages that only useb
+        # bits, so will be computed exactly in languages that only use
         # IEEE-754 doubles as their "number" type.
         for i in range(4):
             state[i] = seed = (121525 * seed + 386076519) & MASK32
