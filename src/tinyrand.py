@@ -2,7 +2,7 @@ SUPPORTED_VERSIONS = (0,)
 DEFAULT_VERSION = 0
 assert DEFAULT_VERSION in SUPPORTED_VERSIONS
 
-MASK32 = (1 << 32) - 1
+MASK32 = 0xffffffff
 
 class TinyRandBase:
     VERSION = None  # subclass must override
@@ -122,3 +122,96 @@ def get(version=DEFAULT_VERSION, seed=0):
        )[version](seed)
     assert version == t.VERSION
     return t
+
+# All the rest is Python-specific quick doctests.
+
+error_tests = """
+>>> t = get(version=666)
+Traceback (most recent call last):
+   ...
+ValueError: ('invalid version', 666, 'must be in', (0,))
+>>> t = get(seed=-1)
+Traceback (most recent call last):
+    ...
+ValueError: ('seed must be >= 0', -1)
+"""
+
+inner_gen_tests = """
+>>> SEED = 42
+>>> t = get(0, SEED)
+>>> for i in range(10):
+...     print(t._get())
+2975584321
+1915941066
+2870739003
+2578514367
+4127658768
+324409786
+1476451891
+1236111477
+2281477571
+616879951
+>>> t.seed(SEED) # ensure it's repeatable
+>>> t = get(0, SEED)
+>>> for i in range(10):
+...     print(t._get())
+2975584321
+1915941066
+2870739003
+2578514367
+4127658768
+324409786
+1476451891
+1236111477
+2281477571
+616879951
+"""
+
+perm_tests = """
+>>> letters = list('abcdefghijklmnopqrstuvwxyz')
+>>> len(letters)
+26
+>>> len(set(letters))
+26
+>>> SEED = 42
+>>> t = get(0, SEED)
+>>> def getone():
+...     xs = letters.copy()
+...     t.shuffle(xs)
+...     return ''.join(xs)
+>>> for i in range(10):
+...     print(getone())
+yojnpldsihgubxteczkqrfmwva
+ivdleyxqpkhfmbcszwrugtjnao
+utcmjevqlxwyazbsdknpohfirg
+rsbxdtcmepiqflyhzognjkvuwa
+vcmgphafiznqxlejuktdsorwby
+pelsocnbhativxrfkwdjugmqzy
+hukoawzxjtbmdipgfrelcynqvs
+yiltkvxpfmcuoghjazqerdbwns
+gkniojhfsamturzxwebycqvpdl
+tfdykvzomnbuhplgcisejxqraw
+>>> t.seed(SEED) # and repeat
+>>> for i in range(10):
+...     print(getone())
+yojnpldsihgubxteczkqrfmwva
+ivdleyxqpkhfmbcszwrugtjnao
+utcmjevqlxwyazbsdknpohfirg
+rsbxdtcmepiqflyhzognjkvuwa
+vcmgphafiznqxlejuktdsorwby
+pelsocnbhativxrfkwdjugmqzy
+hukoawzxjtbmdipgfrelcynqvs
+yiltkvxpfmcuoghjazqerdbwns
+gkniojhfsamturzxwebycqvpdl
+tfdykvzomnbuhplgcisejxqraw
+"""
+
+__test__ = {
+    "err": error_tests,
+    "_get": inner_gen_tests,
+    "perm": perm_tests,
+}
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
