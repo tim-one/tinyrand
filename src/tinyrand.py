@@ -152,7 +152,6 @@ inner_gen_tests = """
 2281477571
 616879951
 >>> t.seed(SEED) # ensure it's repeatable
->>> t = get(0, SEED)
 >>> for i in range(10):
 ...     print(t._get())
 2975584321
