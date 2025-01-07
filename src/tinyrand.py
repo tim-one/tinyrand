@@ -164,6 +164,14 @@ inner_gen_tests = """
 1236111477
 2281477571
 616879951
+>>> t.seed(SEED + (137 << 32)) # high-order bits stripped?
+>>> for i in range(5):
+...     print(t._get())
+2975584321
+1915941066
+2870739003
+2578514367
+4127658768
 """
 
 perm_tests = """
