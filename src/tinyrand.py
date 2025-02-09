@@ -164,7 +164,7 @@ inner_gen_tests = """
 1236111477
 2281477571
 616879951
->>> t.seed((1 << 31) + 12345) # try a 32-btie seed
+>>> t.seed((1 << 31) + 12345) # try a 32-bit seed
 >>> for i in range(10):
 ...     print(t._get())
 650780454
