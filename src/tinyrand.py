@@ -44,8 +44,12 @@ class TinyRandBase:
             if j == hi:
                 hi <<= 1
                 shift -= 1
-            while (i := self._get() >> shift) > j:
-                pass # typically executed at most once
+##            while (i := self._get() >> shift) > j:
+##                pass # typically executed at most once
+            while True: # typically no more than 2 iterations
+                i = self._get() >> shift
+                if i <= j:
+                    break
             a[i], a[j] = a[j], a[i]
 
 class TinyRand0(TinyRandBase):
@@ -78,7 +82,7 @@ class TinyRand0(TinyRandBase):
     # unsigned long xor128(){
     # static unsigned long x=123456789,y=362436069,z=521288629,w=88675123;
     # unsigned long t;
-    # t=(xˆ(x<<11));x=y;y=z;z=w; return( w=(wˆ(w>>19))ˆ(tˆ(t>>8)) );
+    # t=(x^(x<<11));x=y;y=z;z=w; return( w=(w^(w>>19))^(t^(t>>8)) );
 
     def _get(self):
         state = self.state
@@ -196,7 +200,7 @@ perm_tests = """
 >>> SEED = 42
 >>> t = get(0, SEED)
 >>> def getone():
-...     xs = letters.copy()
+...     xs = letters[:]
 ...     t.shuffle(xs)
 ...     return ''.join(xs)
 >>> for i in range(10):
