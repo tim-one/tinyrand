@@ -1,3 +1,8 @@
+# Don't use "advanced" Python features here - clarity is prized. It's
+# intended that it work under any Python release in the Python 3 line.
+# On a 64-bit box, it even runs under Python 2.7.11, although Python 2
+# compatibility is not a goal and may not be maintained.
+
 SUPPORTED_VERSIONS = (0,)
 DEFAULT_VERSION = 0
 assert DEFAULT_VERSION in SUPPORTED_VERSIONS
