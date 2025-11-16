@@ -1,3 +1,12 @@
+**NOTE** I'm not persuing this. While I was happy with it, the problem
+of _seeding_ the generator in a "fair and tamper-proof" way became
+a bottomless pit. Instead I moved on to [a different approach](https://github.com/tim-one/startie),
+using SHA-512 crypto hashing to free the code of all external reliances
+and language-specific quirks. That code is remarkably straightforward,
+and appears at least equally good at giving an illusion of randomness.
+The "heavy lifting" in that is done by a language's implementations of
+the crisply defined UTF-8 encoding and SHA-512 hashing.
+
 Very simple code for shuffling short lists.
 
 The initial code is in Python, but is self-contained, uses no Python-specific
